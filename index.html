@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>JS Drum Kit</title>
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        
+        <div class="main-container">
+
+            <div class="keys">
+                <div data-key="65" class="key">
+                    <kbd>A</kbd>
+                    <span class="sound">clap</span>
+                </div>
+                <div data-key="83" class="key">
+                    <kbd>S</kbd>
+                    <span class="sound" class="key">hithat</span>
+                </div>
+                <div data-key="68" class="key">
+                    <kbd>D</kbd>
+                    <span class="sound">kick</span>
+                </div>
+                <div data-key="70" class="key">
+                    <kbd>F</kbd>
+                    <span class="sound">openhat</span>
+                </div>
+                <div data-key="71" class="key">
+                    <kbd>G</kbd>
+                    <span class="sound">boom</span>
+                </div>
+                <div data-key="72" class="key">
+                    <kbd>H</kbd>
+                    <span class="sound">ride</span>
+                </div>
+                <div data-key="74" class="key">
+                    <kbd>J</kbd>
+                    <span class="sound">snare</span>
+                </div>
+                <div data-key="75" class="key">
+                    <kbd>K</kbd>
+                    <span class="sound">tom</span>
+                </div>
+                <div data-key="76" class="key">
+                    <kbd>L</kbd>
+                    <span class="sound">tink</span>
+                </div>
+            </div>
+
+            <div class="menu-recordings">
+                <button id="record-music" class="menu-recordings__button">Record New Music</button>
+                <button id="stop-music" class="menu-recordings__button">Stop Music</button>
+                <button id="play-music" class="menu-recordings__button">Play Recorded Music</button>
+            </div>
+
+        </div>
+        
+
+        <audio data-key="65" src="sounds/clap.wav"></audio>
+        <audio data-key="83" src="sounds/hihat.wav"></audio>
+        <audio data-key="68" src="sounds/kick.wav"></audio>
+        <audio data-key="70" src="sounds/openhat.wav"></audio>
+        <audio data-key="71" src="sounds/boom.wav"></audio>
+        <audio data-key="72" src="sounds/ride.wav"></audio>
+        <audio data-key="74" src="sounds/snare.wav"></audio>
+        <audio data-key="75" src="sounds/tom.wav"></audio>
+        <audio data-key="76" src="sounds/tink.wav"></audio>
+
+        <script>
+
+            const buttonRecordMusic = document.getElementById('record-music');
+            const buttonStopMusic = document.getElementById('stop-music');
+            const buttonPlayMusic = document.getElementById('play-music');
+
+            let isRecording = false;
+            let notes = {};
+            let frames = 0;
+            let recordingInterval;
+            let recordedInterval;
+            // Intervals are like a timer, on which it loops every specified time a function
+
+            buttonRecordMusic.addEventListener('click', () => {
+                buttonRecordMusic.innerText = 'Recording...';
+                buttonPlayMusic.innerText = 'Play Recorded Music';
+                console.log('recording music');
+                isRecording = true;
+                frames = 0;
+                notes = {};
+                clearInterval(recordingInterval);
+                clearInterval(recordedInterval);
+                recordingInterval = setInterval(countFrame, 17);
+            });
+
+            buttonStopMusic.addEventListener('click', () => {
+                buttonRecordMusic.innerText = 'Record New Music';
+                buttonPlayMusic.innerText = 'Play Recorded Music';
+                console.log('recording had stopped');
+                isRecording = false;
+                clearInterval(recordingInterval);
+                clearInterval(recordedInterval);
+            })
+
+            buttonPlayMusic.addEventListener('click', () => {
+                buttonRecordMusic.innerText = 'Record New Music';
+                buttonPlayMusic.innerText = 'Playing Recorded Music...';
+                console.log('your recorded music is being played now');
+                frames = 0;
+
+                clearInterval(recordingInterval);
+                clearInterval(recordedInterval);
+                recordedInterval = setInterval(countFrameRecordedAudio, 17)
+            });
+
+            function countFrame() {
+                frames += 1;
+            }
+
+            function countFrameRecordedAudio() {
+                if (`${frames}` in notes) {
+                    try {
+                        console.log(notes[`${frames}`]);
+                        let keyPressed = notes[`${frames}`];
+                        let audio = document.querySelector(`audio[data-key="${keyPressed}"]`);
+                        audio.currentTime = 0
+                        audio.play();
+                    } catch(e) {
+                        console.warn('Whoops, looks like you pressed a wrong key!', e);
+                    }
+                    
+                }
+
+                frames += 1;
+                
+            }
+
+
+            function removeTransition(e) {
+                if (e.propertyName !== 'transform') return;
+                e.target.classList.remove('playing');
+            }
+
+            function playSound(e) {
+                const audio = document.querySelector(`audio[data-key="${e.keyCode}"]`);
+                const key = document.querySelector(`div[data-key="${e.keyCode}"]`);
+
+                if (isRecording === true) {
+                    console.log(e.keyCode);
+                    notes[`${frames}`] = e.keyCode;
+                }
+                
+                if (!audio) return;
+                
+                key.classList.add('playing');
+                audio.currentTime = 0;
+                audio.play();
+            }
+
+            const keys = Array.from(document.querySelectorAll('.key'));
+            keys.forEach(key => key.addEventListener('transitionend', removeTransition));
+            window.addEventListener('keyup', playSound);           
+        </script>
+
+    </body>
+</html>
